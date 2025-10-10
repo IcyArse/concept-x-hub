@@ -1,8 +1,24 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Sparkles, Users, Rocket } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/happening");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-purple-50/20 to-background">
       <div className="container mx-auto px-4 py-20">

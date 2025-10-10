@@ -1,5 +1,8 @@
 import { Home, Lightbulb, User, Bell, MessageSquare, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "./ui/button";
+import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
@@ -13,6 +16,8 @@ const navigationItems = [
 
 export const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   return (
     <>
@@ -49,6 +54,19 @@ export const Navigation = () => {
             );
           })}
         </nav>
+
+        {user && (
+          <div className="p-3">
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => signOut()}
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
+          </div>
+        )}
       </aside>
 
       {/* Mobile Bottom Bar */}

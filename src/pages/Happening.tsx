@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MessageCircle, Sparkles, Plus } from "lucide-react";
+import { Heart, MessageCircle, Sparkles, Plus, Send } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const mockProjects = [
   {
@@ -34,13 +37,27 @@ const mockProjects = [
 
 export default function Happening() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const handleInteraction = (action: string) => {
     toast.success(`${action} action (Backend needed to persist)`);
   };
 
+  const startChat = async (authorName: string) => {
+    if (!user) {
+      toast.error("Please sign in to start a chat");
+      navigate("/auth");
+      return;
+    }
+
+    // In a real app, you'd look up the user by name and create a conversation
+    toast.success(`Chat feature - would start conversation with ${authorName}`);
+    navigate("/messages");
+  };
+
   return (
-    <Layout>
+    <ProtectedRoute>
+      <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -117,8 +134,10 @@ export default function Happening() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleInteraction("Message")}
+                      className="gap-2"
+                      onClick={() => startChat(project.author)}
                     >
+                      <Send className="w-4 h-4" />
                       Message
                     </Button>
                   </div>
@@ -129,5 +148,6 @@ export default function Happening() {
         </div>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }
