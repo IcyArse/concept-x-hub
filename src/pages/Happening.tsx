@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,6 +33,8 @@ const mockProjects = [
 ];
 
 export default function Happening() {
+  const navigate = useNavigate();
+  
   const handleInteraction = (action: string) => {
     toast.success(`${action} action (Backend needed to persist)`);
   };
@@ -49,7 +52,7 @@ export default function Happening() {
               Discover projects and collaborate with creators
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/create-post")}>
             <Plus className="w-4 h-4" />
             Post Project
           </Button>
