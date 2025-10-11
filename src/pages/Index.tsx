@@ -30,7 +30,7 @@ const Index = () => {
           
           {/* Hero */}
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Welcome to <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Concept X</span>
+            Welcome to <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Concept</span><span className="bg-gradient-to-r from-purple-800 to-purple-950 dark:from-purple-400 dark:to-purple-300 bg-clip-text text-transparent">X</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
@@ -42,36 +42,33 @@ const Index = () => {
             <Button asChild size="lg" className="text-lg px-8 shadow-lg">
               <Link to="/auth">Get Started</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8">
-              <Link to="/happening">Explore Projects</Link>
-            </Button>
           </div>
           
           {/* Features */}
           <div className="grid md:grid-cols-3 gap-8 pt-20">
-            <div className="p-6 rounded-xl bg-card border border-border hover:shadow-md transition-shadow">
+            <Link to="/happening" className="p-6 rounded-xl bg-card border border-border hover:shadow-md transition-shadow block">
               <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Discover Projects</h3>
               <p className="text-muted-foreground">
                 Find exciting projects and opportunities to collaborate
               </p>
-            </div>
+            </Link>
             
-            <div className="p-6 rounded-xl bg-card border border-border hover:shadow-md transition-shadow">
+            <Link to="/search" className="p-6 rounded-xl bg-card border border-border hover:shadow-md transition-shadow block">
               <Users className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Build Together</h3>
               <p className="text-muted-foreground">
                 Connect with talented creators and grow your network
               </p>
-            </div>
+            </Link>
             
-            <div className="p-6 rounded-xl bg-card border border-border hover:shadow-md transition-shadow">
+            <Link to="/create-post" className="p-6 rounded-xl bg-card border border-border hover:shadow-md transition-shadow block">
               <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Launch Ideas</h3>
               <p className="text-muted-foreground">
                 Share your vision and bring concepts to life together
               </p>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

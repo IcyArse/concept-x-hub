@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const CreatePost = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -19,6 +22,26 @@ const CreatePost = () => {
   const [links, setLinks] = useState<string[]>([]);
   const [linkInput, setLinkInput] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  // Load pending post data from sessionStorage if exists
+  useEffect(() => {
+    const pendingPost = sessionStorage.getItem('pendingPost');
+    if (pendingPost && user) {
+      const postData = JSON.parse(pendingPost);
+      setTitle(postData.title || "");
+      setBody(postData.description || "");
+      setTags(postData.tags || []);
+      setLinks(postData.links || []);
+      setUploadedImages(postData.images || []);
+      sessionStorage.removeItem('pendingPost');
+      
+      // Auto-submit the post
+      setTimeout(() => {
+        handleSubmitPost(postData);
+      }, 100);
+    }
+  }, [user]);
 
   const wordCount = title.trim().split(/\s+/).filter(word => word.length > 0).length;
 
@@ -54,37 +77,66 @@ const CreatePost = () => {
     setImages(images.filter((_, i) => i !== index));
   };
 
+  const handleSubmitPost = async (postData?: any) => {
+    const dataToSubmit = postData || {
+      title,
+      description: body,
+      tags,
+      links,
+      images: uploadedImages
+    };
+
+    if (!user) {
+      // Store post data in sessionStorage and redirect to auth
+      sessionStorage.setItem('pendingPost', JSON.stringify(dataToSubmit));
+      toast.error("Please sign in to create a post");
+      navigate("/auth");
+      return;
+    }
+
+    const titleText = dataToSubmit.title || title;
+    const bodyText = dataToSubmit.description || body;
+    
+    if (titleText.trim().split(/\s+/).filter((word: string) => word.length > 0).length > 50) {
+      toast.error("Title must be 50 words or less");
+      return;
+    }
+
+    if (!titleText.trim() || !bodyText.trim()) {
+      toast.error("Please fill in title and body");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          title: titleText.trim(),
+          description: bodyText.trim(),
+          tags: dataToSubmit.tags || tags,
+          links: dataToSubmit.links || links,
+          images: dataToSubmit.images || uploadedImages
+        });
+
+      if (error) throw error;
+
+      toast.success("Post created successfully!");
+      navigate("/happening");
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error("Failed to create post");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (wordCount > 50) {
-      toast({
-        title: "Title too long",
-        description: "Title must be 50 words or less",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!title.trim() || !body.trim()) {
-      toast({
-        title: "Missing required fields",
-        description: "Please fill in title and body",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Post created!",
-      description: "Your post has been created successfully",
-    });
-    
-    navigate("/happening");
+    handleSubmitPost();
   };
 
   return (
-    <Layout>
+    <ProtectedRoute>
+      <Layout>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Create New Post</h1>
         
@@ -220,6 +272,7 @@ const CreatePost = () => {
         </form>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 };
 

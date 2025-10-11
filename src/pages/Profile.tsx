@@ -18,15 +18,41 @@ interface Profile {
   bio: string;
 }
 
+interface Post {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+}
+
+interface Collaborator {
+  id: string;
+  status: string;
+  collaborator_id: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadingCollaborators, setLoadingCollaborators] = useState(true);
 
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadPosts();
+      loadCollaborators();
     }
   }, [user]);
 
@@ -41,6 +67,54 @@ export default function Profile() {
 
     if (data) {
       setProfile(data);
+    }
+  };
+
+  const loadPosts = async () => {
+    if (!user) return;
+    
+    setLoadingPosts(true);
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (error) {
+      console.error('Error loading posts:', error);
+      toast.error("Failed to load posts");
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const loadCollaborators = async () => {
+    if (!user) return;
+    
+    setLoadingCollaborators(true);
+    try {
+      const { data, error } = await supabase
+        .from('collaborators')
+        .select(`
+          *,
+          profiles!collaborators_collaborator_id_fkey (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'accepted');
+
+      if (error) throw error;
+      setCollaborators(data || []);
+    } catch (error) {
+      console.error('Error loading collaborators:', error);
+      toast.error("Failed to load collaborators");
+    } finally {
+      setLoadingCollaborators(false);
     }
   };
 
@@ -143,9 +217,53 @@ export default function Profile() {
           {/* Posts section */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Posts</h2>
-            <p className="text-muted-foreground text-center py-8">
-              No posts yet
-            </p>
+            {loadingPosts ? (
+              <p className="text-muted-foreground text-center py-8">Loading posts...</p>
+            ) : posts.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No posts yet</p>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <Card key={post.id} className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
+                    <p className="text-muted-foreground mb-3">{post.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {post.tags.map((tag, idx) => (
+                        <Badge key={idx} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <span>{post.likes_count} likes</span>
+                      <span>{post.comments_count} comments</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Collaborators section */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Collaborators</h2>
+            {loadingCollaborators ? (
+              <p className="text-muted-foreground text-center py-8">Loading...</p>
+            ) : collaborators.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No collaborators yet</p>
+            ) : (
+              <div className="space-y-3">
+                {collaborators.map((collab) => (
+                  <div key={collab.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <Avatar>
+                      <AvatarImage src={collab.profiles.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${collab.profiles.username}`} />
+                      <AvatarFallback>{collab.profiles.username[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{collab.profiles.username}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </Layout>

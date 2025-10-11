@@ -1,4 +1,4 @@
-import { Home, Lightbulb, User, Bell, MessageSquare, Settings } from "lucide-react";
+import { Lightbulb, User, Bell, MessageSquare, Settings } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "./ui/button";
@@ -6,7 +6,6 @@ import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
-  { icon: Home, label: "Home", path: "/" },
   { icon: Lightbulb, label: "Happening", path: "/happening" },
   { icon: MessageSquare, label: "Messages", path: "/messages" },
   { icon: Bell, label: "Notifications", path: "/notifications" },
