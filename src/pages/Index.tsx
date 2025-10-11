@@ -30,7 +30,7 @@ const Index = () => {
           
           {/* Hero */}
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Welcome to <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Concept</span><span className="bg-gradient-to-r from-purple-800 to-purple-950 dark:from-purple-400 dark:to-purple-300 bg-clip-text text-transparent">X</span>
+            Welcome to <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Concept</span><span className="bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-300 dark:to-slate-100 bg-clip-text text-transparent">X</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
