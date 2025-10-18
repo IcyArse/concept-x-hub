@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,6 +39,7 @@ interface Collaborator {
 }
 
 export default function Profile() {
+  const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -50,35 +51,39 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
-      loadProfile();
-      loadPosts();
-      loadCollaborators();
+      const profileUserId = userId || user.id;
+      setIsOwnProfile(profileUserId === user.id);
+      loadProfile(profileUserId);
+      loadPosts(profileUserId);
+      loadCollaborators(profileUserId);
     }
-  }, [user]);
+  }, [user, userId]);
 
-  const loadProfile = async () => {
-    if (!user) return;
+  const loadProfile = async (profileUserId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", profileUserId)
+        .single();
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (data) {
-      setProfile(data);
+      if (error) throw error;
+      if (data) {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+      toast.error("Failed to load profile");
     }
   };
 
-  const loadPosts = async () => {
-    if (!user) return;
-    
+  const loadPosts = async (profileUserId: string) => {
     setLoadingPosts(true);
     try {
       const { data, error } = await supabase
         .from('posts')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', profileUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -91,9 +96,7 @@ export default function Profile() {
     }
   };
 
-  const loadCollaborators = async () => {
-    if (!user) return;
-    
+  const loadCollaborators = async (profileUserId: string) => {
     setLoadingCollaborators(true);
     try {
       const { data, error } = await supabase
@@ -105,7 +108,7 @@ export default function Profile() {
             avatar_url
           )
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', profileUserId)
         .eq('status', 'accepted');
 
       if (error) throw error;
@@ -123,35 +126,40 @@ export default function Profile() {
   };
 
   const startChat = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile || profile.id === user.id) return;
 
-    // Create a new conversation
-    const { data: conversation, error: convoError } = await supabase
-      .from("conversations")
-      .insert({})
-      .select()
-      .single();
+    try {
+      // Create a new conversation
+      const { data: conversation, error: convoError } = await supabase
+        .from("conversations")
+        .insert({})
+        .select()
+        .single();
 
-    if (convoError || !conversation) {
-      toast.error("Failed to create conversation");
-      return;
+      if (convoError || !conversation) {
+        toast.error("Failed to create conversation");
+        return;
+      }
+
+      // Add both participants
+      const { error: participantsError } = await supabase
+        .from("conversation_participants")
+        .insert([
+          { conversation_id: conversation.id, user_id: user.id },
+          { conversation_id: conversation.id, user_id: profile.id }
+        ]);
+
+      if (participantsError) {
+        toast.error("Failed to add participants");
+        return;
+      }
+
+      toast.success("Chat started!");
+      navigate("/messages");
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start conversation");
     }
-
-    // Add both participants
-    const { error: participantsError } = await supabase
-      .from("conversation_participants")
-      .insert([
-        { conversation_id: conversation.id, user_id: user.id },
-        { conversation_id: conversation.id, user_id: profile.id }
-      ]);
-
-    if (participantsError) {
-      toast.error("Failed to add participants");
-      return;
-    }
-
-    toast.success("Chat started!");
-    navigate("/messages");
   };
 
   if (!profile) {

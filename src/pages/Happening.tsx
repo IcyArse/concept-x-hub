@@ -278,12 +278,35 @@ export default function Happening() {
                   
                   <div className="flex-1 space-y-3">
                     <div>
-                      <h3 className="font-semibold text-lg">{project.title}</h3>
-                      <p className="text-sm text-muted-foreground">by {project.profiles.username}</p>
+                      <h3 
+                        className="font-semibold text-lg cursor-pointer hover:text-primary"
+                        onClick={() => navigate(`/post/${project.id}`)}
+                      >
+                        {project.title}
+                      </h3>
+                      <p 
+                        className="text-sm text-muted-foreground cursor-pointer hover:text-primary"
+                        onClick={() => navigate(`/profile/${project.user_id}`)}
+                      >
+                        by {project.profiles.username}
+                      </p>
                     </div>
                     
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown>{project.description}</ReactMarkdown>
+                    <div 
+                      className="prose prose-sm dark:prose-invert max-w-none relative cursor-pointer"
+                      onClick={() => navigate(`/post/${project.id}`)}
+                    >
+                      {project.description.length > 300 ? (
+                        <>
+                          <div className="relative">
+                            <ReactMarkdown>{project.description.substring(0, 300)}</ReactMarkdown>
+                            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                          </div>
+                          <p className="text-sm text-primary mt-2">Click to read more...</p>
+                        </>
+                      ) : (
+                        <ReactMarkdown>{project.description}</ReactMarkdown>
+                      )}
                     </div>
                     
                     <div className="flex flex-wrap gap-2">
@@ -339,7 +362,7 @@ export default function Happening() {
                     {showComments[project.id] && (
                       <div className="mt-4 space-y-3 border-t pt-4">
                         <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {selectedPostComments[project.id]?.map((comment) => (
+                          {selectedPostComments[project.id]?.slice(0, 3).map((comment) => (
                             <div key={comment.id} className="flex gap-2">
                               <Avatar className="w-8 h-8">
                                 <AvatarImage src={comment.profiles.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.profiles.username}`} />
@@ -351,6 +374,14 @@ export default function Happening() {
                               </div>
                             </div>
                           ))}
+                          {selectedPostComments[project.id]?.length > 3 && (
+                            <p 
+                              className="text-sm text-primary cursor-pointer hover:underline text-center"
+                              onClick={() => navigate(`/post/${project.id}`)}
+                            >
+                              View all {selectedPostComments[project.id].length} comments
+                            </p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Input

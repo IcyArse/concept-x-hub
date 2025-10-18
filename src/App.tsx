@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Happening from "./pages/Happening";
 import CreatePost from "./pages/CreatePost";
 import Profile from "./pages/Profile";
+import PostView from "./pages/PostView";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
@@ -28,6 +29,8 @@ const App = () => (
           <Route path="/happening" element={<Happening />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<Profile />} />
+          <Route path="/post/:postId" element={<PostView />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
