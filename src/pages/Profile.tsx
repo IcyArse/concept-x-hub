@@ -129,36 +129,14 @@ export default function Profile() {
     if (!user || !profile || profile.id === user.id) return;
 
     try {
-      // Create a new conversation
-      const { data: conversation, error: convoError } = await supabase
-        .from("conversations")
-        .insert({})
-        .select()
-        .single();
+      // Create conversation and add both participants server-side (bypasses RLS safely)
+      const { data: convId, error: rpcError } = await (supabase as any).rpc(
+        'create_conversation_with_participants',
+        { _user1: user.id, _user2: profile.id }
+      );
 
-      if (convoError || !conversation) {
+      if (rpcError || !convId) {
         toast.error("Failed to create conversation");
-        return;
-      }
-
-      // Add both participants
-      // Add current user as participant first
-      const { error: selfError } = await supabase
-        .from("conversation_participants")
-        .insert({ conversation_id: conversation.id, user_id: user.id });
-
-      if (selfError) {
-        toast.error("Failed to add you to the conversation");
-        return;
-      }
-
-      // Then add the other participant
-      const { error: otherError } = await supabase
-        .from("conversation_participants")
-        .insert({ conversation_id: conversation.id, user_id: profile.id });
-
-      if (otherError) {
-        toast.error("Failed to add the other participant");
         return;
       }
 

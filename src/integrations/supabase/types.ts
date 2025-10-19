@@ -331,7 +331,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_conversation_with_participants: {
+        Args: { _user1: string; _user2: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
