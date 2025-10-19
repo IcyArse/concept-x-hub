@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Settings, MessageSquare } from "lucide-react";
+import { Camera, Settings, MessageSquare, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -142,15 +142,23 @@ export default function Profile() {
       }
 
       // Add both participants
-      const { error: participantsError } = await supabase
+      // Add current user as participant first
+      const { error: selfError } = await supabase
         .from("conversation_participants")
-        .insert([
-          { conversation_id: conversation.id, user_id: user.id },
-          { conversation_id: conversation.id, user_id: profile.id }
-        ]);
+        .insert({ conversation_id: conversation.id, user_id: user.id });
 
-      if (participantsError) {
-        toast.error("Failed to add participants");
+      if (selfError) {
+        toast.error("Failed to add you to the conversation");
+        return;
+      }
+
+      // Then add the other participant
+      const { error: otherError } = await supabase
+        .from("conversation_participants")
+        .insert({ conversation_id: conversation.id, user_id: profile.id });
+
+      if (otherError) {
+        toast.error("Failed to add the other participant");
         return;
       }
 
@@ -159,6 +167,35 @@ export default function Profile() {
     } catch (error) {
       console.error("Error starting chat:", error);
       toast.error("Failed to start conversation");
+    }
+  };
+
+  const sendCollaboratorRequest = async () => {
+    if (!user || !profile || profile.id === user.id) return;
+    try {
+      // Check if a relationship already exists (pending or accepted)
+      const { data: existing, error: checkError } = await supabase
+        .from('collaborators')
+        .select('id, status')
+        .or(`and(user_id.eq.${user.id},collaborator_id.eq.${profile.id}),and(user_id.eq.${profile.id},collaborator_id.eq.${user.id}))`);
+
+      if (checkError) throw checkError;
+      if (existing && existing.length > 0) {
+        toast.info("Collaborator request already exists");
+        return;
+      }
+
+      const { error } = await supabase.from('collaborators').insert({
+        user_id: user.id,
+        collaborator_id: profile.id,
+        status: 'pending'
+      });
+
+      if (error) throw error;
+      toast.success('Collaborator request sent');
+    } catch (err) {
+      console.error('Error sending collaborator request:', err);
+      toast.error('Failed to send collaborator request');
     }
   };
 
@@ -211,10 +248,16 @@ export default function Profile() {
                         Edit Profile
                       </Button>
                     ) : (
-                      <Button onClick={startChat} size="sm" className="gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        Message
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={startChat} size="sm" className="gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          Message
+                        </Button>
+                        <Button onClick={sendCollaboratorRequest} variant="secondary" size="sm" className="gap-2">
+                          <UserPlus className="w-4 h-4" />
+                          Add Collaborator
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -232,7 +275,7 @@ export default function Profile() {
             ) : (
               <div className="space-y-4">
                 {posts.map((post) => (
-                  <Card key={post.id} className="p-4">
+                  <Card key={post.id} className="p-4 cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate(`/post/${post.id}`)}>
                     <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
                     <p className="text-muted-foreground mb-3">{post.description}</p>
                     <div className="flex flex-wrap gap-2 mb-3">
