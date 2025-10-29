@@ -25,12 +25,12 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           {/* Logo */}
           <div className="inline-flex w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-purple-600 items-center justify-center mb-4 shadow-lg">
-            <span className="text-white font-bold text-4xl">C</span>
+            <img src="https://media.discordapp.net/attachments/799164709290246164/1426612637969547334/android-chrome-192x192.png?ex=68ebdc0e&is=68ea8a8e&hm=71c6fdba3196300c6a6c17ed3670f5cc79c5280371865d6a94c3161126a1f521&=&format=webp&quality=lossless&width=240&height=240"></img>
           </div>
           
           {/* Hero */}
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Welcome to <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Concept</span><span className="bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-300 dark:to-slate-100 bg-clip-text text-transparent">X</span>
+            Welcome to <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text">Concept</span><span className="bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-300 dark:to-slate-100 bg-clip-text ">X</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
